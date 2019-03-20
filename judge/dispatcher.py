@@ -109,8 +109,8 @@ class JudgeDispatcher(DispatcherBase):
             score = 0
             try:
                 for i in range(len(resp_data)):
-                    if resp_data[i]["result"] == JudgeStatus.ACCEPTED:
-                        resp_data[i]["score"] = self.problem.test_case_score[i]["score"]
+                    if resp_data[i]["result"] in (JudgeStatus.ACCEPTED, JudgeStatus.WRONG_ANSWER):
+                        resp_data[i]["score"] = resp_data[i]["score"]
                         score += resp_data[i]["score"]
                     else:
                         resp_data[i]["score"] = 0
@@ -147,7 +147,8 @@ class JudgeDispatcher(DispatcherBase):
             "spj_config": spj_config.get("config"),
             "spj_compile_config": spj_config.get("compile"),
             "spj_src": self.problem.spj_code,
-            "io_mode": self.problem.io_mode
+            "io_mode": self.problem.io_mode,
+            "test_case_score": self.problem.test_case_score
         }
 
         with ChooseJudgeServer() as server:
@@ -341,7 +342,7 @@ class JudgeDispatcher(DispatcherBase):
                 # todo unique index
                 # func 也不是安全的
                 rank = model.objects.get(user_id=self.submission.user_id, contest=self.contest)
-            except ACMContestRank.DoesNotExist:
+            except model.DoesNotExist:
                 try:
                     rank = model.objects.create(user_id=self.submission.user_id, contest=self.contest)
                 except IntegrityError:
